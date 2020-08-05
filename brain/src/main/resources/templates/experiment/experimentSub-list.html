@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html class="x-admin-sm" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>预约列表</title>
+    <header th:replace="header::html"></header>
+</head>
+
+<body class="">
+    <div class="x-nav">
+          <span class="layui-breadcrumb">
+            <a href="">首页</a>
+            <a href="">实验预约管理</a>
+            <a>
+              <cite>预约列表</cite></a>
+          </span>
+        <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" href="javascript:location.replace(location.href);" title="刷新">
+            <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+    </div>
+
+    <div class="layui-fluid">
+        <div class="layui-row  layui-col-space15">
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-body ">
+                        <form class="layui-form  layui-col-space5">
+                            <div class="layui-inline layui-show-xs-block">
+                                <input type="text" name="id"  placeholder="请输入实验编号" autocomplete="off" class="layui-input">
+                            </div>
+                            <div class="layui-inline layui-show-xs-block">
+                                <button class="layui-btn"  lay-submit="" lay-filter="search"><i class="layui-icon">&#xe615;</i></button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="layui-card-header">
+                        <button class="layui-btn layui-btn-danger" onclick="delAll()"><i class="layui-icon"></i>批量删除</button>
+                    </div>
+
+                    <div class="layui-card-body ">
+                        <table class="layui-hide" id="table" lay-filter="member"></table>
+                    </div>
+
+                    <div class="layui-card-body ">
+                        <script type="text/html" id="barDemo">
+                            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" >删除</a>
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+
+    layui.use('table', function(){
+        var table = layui.table,
+            form=layui.form;
+        table.render({
+            elem: '#table'
+            ,url: '/experimentPre/getSubjects' //数据接口
+            ,page: true //开启分页
+            ,response: {
+                countName: 'count', //规定数据总数的字段名称，默认：count
+                dataName: 'datas' //规定数据列表的字段名称，默认：data
+            }
+            , cols: [
+                [ //表头
+                    {type: 'checkbox', fixed: 'left'}
+                    , {field: 'id', title: '实验编号', align: 'center', width: 100}
+                    , {field: 'userId', title: '受试者一卡通号', align: 'center',width: 200}
+                    , {field: 'username', title: '受试者姓名', align: 'center',width: 120}
+                    , {field: 'telephone', title: '手机号', align: 'center',width: 160}
+                    , {field: 'email', title: '邮箱', align: 'center',width: 160}
+                    , {field: 'content', title: '实验概述', width: 150, align: 'center'}
+                    , {field: 'right', title: '操作', toolbar: '#barDemo', width: 70}
+                ]
+            ]
+        });
+
+        //监听工具条
+        table.on('tool(member)', function(obj){
+            var data = obj.data;
+            if(obj.event === 'del'){
+                layer.confirm('真的删除行么', function(index){
+                    $.ajax({
+                        url:"/experiment/delete",
+                        type:"GET",
+                        data:{id:data.id},
+                        dataType:'json',
+                        success:function(result){
+                            if(result.code == 200){
+                                layer.alert("删除成功", {icon: 1},function (index1) {
+                                    layer.close(index1);
+                                    //xadmin.father_reload();
+                                    table.reload('table');
+                                });
+                            }else{
+                                layer.alert(result.msg);
+                            }
+
+                        },
+                    });
+                });
+            }
+        })
+
+        //搜索
+        form.on('submit(search)', function(data){
+            var username = data.field.username;
+            table.render({
+                elem: '#table'
+                ,url: '/experimentPre/findRoleByFuzzyRoleName' //数据接口
+                ,page: true //开启分页
+                ,where:{
+                    "roleName":username
+                } ,response: {
+                    dataName: 'datas' //规定数据列表的字段名称，默认：data
+                }
+                , cols: [
+                    [ //表头
+                        {type: 'checkbox', fixed: 'left'}
+                        , {field: 'id', title: '实验编号', align: 'center', width: 100}
+                        , {field: 'userId', title: '受试者一卡通号', align: 'center',width: 200}
+                        , {field: 'username', title: '受试者姓名', align: 'center',width: 120}
+                        , {field: 'telephone', title: '手机号', align: 'center',width: 160}
+                        , {field: 'email', title: '邮箱', align: 'center',width: 160}
+                        , {field: 'content', title: '实验概述', width: 150, align: 'center'}
+                        , {field: 'right', title: '操作', toolbar: '#barDemo', width: 100}
+                    ]
+                ]
+            });
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

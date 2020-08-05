@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html class="x-admin-sm" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>BCI-System</title>
+        <header th:replace="header::html"></header>
+    </head>
+    <body>
+        <div class="x-nav">
+          <span class="layui-breadcrumb">
+            <a href="">首页</a>
+            <a href="">人员管理</a>
+            <a>
+                <cite>用户列表</cite></a>
+          </span>
+            <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" href="javascript:location.replace(location.href);" title="刷新">
+                <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+        </div>
+
+        <div class="layui-fluid">
+            <div class="layui-row  layui-col-space15">
+                <div class="layui-col-md12">
+                    <div class="layui-card">
+                        <div class="layui-card-body ">
+                            <form class="layui-form  layui-col-space5">
+                                <div class="layui-inline layui-show-xs-block">
+                                    <input type="text" name="username"  placeholder="请输入用户名" autocomplete="off" class="layui-input">
+                                </div>
+                                <div class="layui-inline layui-show-xs-block">
+                                    <button class="layui-btn"  lay-submit="" lay-filter="search"><i class="layui-icon">&#xe615;</i></button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="layui-card-header">
+                            <button class="layui-btn layui-btn-danger" onclick="delAll()"><i class="layui-icon"></i>批量删除</button>
+                            <button class="layui-btn" onclick="xadmin.open('添加用户','/user/add')" permission="user:add"><i class="layui-icon"></i>添加</button>
+                        </div>
+
+                        <div class="layui-card-body ">
+                            <table class="layui-hide" id="table" lay-filter="member"></table>
+                        </div>
+
+                        <div class="layui-card-body ">
+                            <script type="text/html" id="barDemo">
+                                <a class="layui-btn layui-btn-xs" lay-event="edit" >编辑</a>
+                                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" >删除</a>
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script>
+        //假如layui的表格样式
+        layui.use('table', function(){
+            var table = layui.table,
+                form = layui.form;
+            table.render({
+                elem: '#table'
+                ,url: '/user/list' //数据接口
+                ,page: true //开启分页
+                ,response: {
+                    countName: 'count', //规定数据总数的字段名称，默认：count
+                    dataName: 'datas' //规定数据列表的字段名称，默认：data
+                }
+                ,cols: [
+                    [ //表头
+                        {type: 'checkbox', fixed: 'left'}
+                        ,{field: 'id', title: '一卡通号', align:'center', width:100}
+                        ,{field: 'username', title: '姓名',align:'center', width:100}
+                        ,{field: 'sex', title: '性别',align:'center', width:70}
+                        ,{field: 'telephone', title: '手机号',align:'center', width:150}
+                        ,{field: 'email', title: '邮箱',align:'center', width:180}
+                        ,{field: 'birthday', title: '生日',align:'center', width:100}
+                        ,{field: 'status', title: '身份', align:'center', width:100, templet:function(d){
+                            if(d.status == '1') return "被试";
+                            else return  d.status == '2' ? "实验员":"教师";
+                        }}
+                        ,{field: 'stage', title: '实验阶段', align:'center', width:150, templet:function(d){
+                            if(d.stage == '0') return "未进行";
+                            else if(d.stage == '1') return "无反馈";
+                            else if(d.stage == '2') return "一维训练";
+                            else if(d.stage == '3') return "二维训练";
+                            else if(d.stage == '4') return "在线实验";
+                        }}
+                        ,{field: 'count', title: '实验次数',align:'center', width:80}
+                        ,{title:'操作', toolbar: '#barDemo' }
+                    ]
+                ],
+                done:function () {
+                    checkPermission();
+                }
+            });
+
+            //监听工具条
+            table.on('tool(member)', function(obj){
+                var data = obj.data;
+                if(obj.event === 'del'){
+                    layer.confirm('真的删除行么', function(index){
+                        $.ajax({
+                            url:"/user/delete",
+                            type:"GET",
+                            data:{id:data.id},
+                            dataType:'json',
+                            success:function(result){
+                                layer.alert("删除成功", {icon: 1},function (index1) {
+                                    layer.close(index1);
+                                    xadmin.father_reload();
+                                    //table.reload('table');
+                                });
+                            },
+                        });
+
+                    });
+                } else if(obj.event === 'edit'){
+                    xadmin.open('编辑用户信息','/user/edit/?id='+data.id);
+                }
+            });
+
+
+            //监听提交
+            form.on('submit(search)', function(data){
+                var username = data.field.username;
+                table.render({
+                    elem: '#table'
+                    ,url: '/user/findUserByFuzzyUsername' //数据接口
+                    ,page: true //开启分页
+                    ,where:{
+                        "username":username
+                    }
+                    ,response: {
+                        countName: 'count', //规定数据总数的字段名称，默认：count
+                        dataName: 'datas' //规定数据列表的字段名称，默认：data
+                    }
+                    ,cols: [
+                        [ //表头
+                            {type: 'checkbox', fixed: 'left'}
+                            ,{field: 'id', title: '一卡通号', align:'center', width:100}
+                            ,{field: 'username', title: '姓名',align:'center', width:100}
+                            ,{field: 'sex', title: '性别',align:'center', width:70}
+                            ,{field: 'telephone', title: '手机号',align:'center', width:150}
+                            ,{field: 'email', title: '邮箱',align:'center', width:180}
+                            ,{field: 'birthday', title: '生日',align:'center', width:100}
+                            ,{field: 'status', title: '身份', align:'center', width:100, templet:function(d){
+                                if(d.status == '1') return "被试";
+                                else return  d.status == '2' ? "实验员":"教师";
+                            }}
+                            ,{field: 'stage', title: '实验阶段', align:'center', width:150, templet:function(d){
+                                if(d.stage == '0') return "未进行";
+                                else if(d.stage == '1') return "无反馈";
+                                else if(d.stage == '2') return "一维训练";
+                                else if(d.stage == '3') return "二维训练";
+                                else if(d.stage == '4') return "在线实验";
+                            }}
+                            ,{field: 'count', title: '实验次数',align:'center', width:80}
+                            ,{title:'操作', toolbar: '#barDemo' }
+                        ]
+                    ]
+                });
+                return false;
+            });
+            checkPermission();
+        });
+    </script>
+
+</html>

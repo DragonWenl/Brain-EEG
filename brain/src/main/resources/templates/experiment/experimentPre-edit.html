@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html class="x-admin-sm" xmlns:th="http://www.thymeleaf.org">
+  
+  <head>
+    <meta charset="UTF-8">
+    <title>更新预约实验</title>
+    <header th:replace="header::html"></header>
+  </head>
+  
+  <body>
+    <div class="x-body">
+        <form class="layui-form">
+
+            <div class="layui-form-item">
+                <label for="L_startTime" class="layui-form-label">*实验开始时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="L_startTime"   th:value="${#dates.format(experimentPre.startTime,'yyyy-MM-dd')}" name='startTime' placeholder="yyyy-MM-dd" class="layui-input ">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label for="L_endTime" class="layui-form-label">*实验结束时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="L_endTime"  th:value="${#dates.format(experimentPre.endTime,'yyyy-MM-dd')}" name='endTime' placeholder="yyyy-MM-dd" class="layui-input ">
+                </div>
+            </div>
+
+          <div class="layui-form-item">
+              <label for="L_subjects" class="layui-form-label">
+                  <span class="x-red">*</span>需要受试者人数
+              </label>
+              <div class="layui-input-inline">
+                  <input type="text" id="L_subjects" th:value="${experimentPre.subjects}" name="subjects" lay-verify="required" autocomplete="off" class="layui-input">
+              </div>
+          </div>
+
+            <div class="layui-form-item">
+                <label for="L_money" class="layui-form-label">
+                    <span class="x-red">*</span>酬金
+                </label>
+                <div class="layui-input-inline">
+                    <input type="text" id="L_money" th:value="${experimentPre.money}" name="money" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">*实验要求</label>
+                <div class="layui-input-block">
+                    <input type="radio" th:value="${experimentPre.experience}" name="stage" value="0" title="无要求">
+                    <input type="radio" th:value="${experimentPre.experience}" name="stage" value="1" title="无实验经验">
+                    <input type="radio" th:value="${experimentPre.experience}" name="stage" value="2" title="有实验经验">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label for="L_content" class="layui-form-label">
+                    <span class="x-red">*</span>实验内容
+                </label>
+                <div class="layui-input-inline">
+                    <input type="text" id="L_content" th:value="${experimentPre.content}" name="content" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+          <div class="layui-form-item">
+              <label for="L_money" class="layui-form-label">
+              </label>
+              <button  class="layui-btn" lay-filter="edit" lay-submit="">
+                  保存
+              </button>
+          </div>
+      </form>
+    </div>
+    <script>
+
+      layui.use(['form','layer', 'laydate'], function(){
+          $ = layui.jquery;
+        var form = layui.form
+        ,layer = layui.layer
+        ,laydate = layui.laydate;
+          //日期
+          laydate.render({
+              elem: '#L_startTime'
+              ,format: 'yyyy-MM-dd' //可任意组合
+              ,elem:'#L_endTime'
+              ,format: 'yyyy-MM-dd' //可任意组合
+          });
+
+      //监听提交，提交动作里做的具体事情
+        form.on('submit(add)', function(data){
+            var rolelRadio = $("[name=roleId]:checked");
+            if(rolelRadio == undefined || rolelRadio.length <= 0){
+                layer.alert("请给该用户设置角色");
+                return false;
+            }
+            $.ajax({
+                url:"/experimentPre/add",
+                type:"POST",
+                data:data.field,
+                dataType:'json',
+                success:function(result){//返回错误信息
+                    if(result.code == 500 || result.code == 5000100 || result.code == 5000101 || result.code == 5000102){
+                        layer.alert(result.msg); //打印错误信息
+                    }else{
+                        layer.alert("设置成功", {icon: 6},function () { //没有错误信息
+                            //关闭当前frame
+                            xadmin.close();
+                            // 可以对父窗口进行刷新
+                            xadmin.father_reload();
+                        });
+                    }
+                }
+            });
+          return false;
+        });
+      });
+
+  </script>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.brain.dao.UserDao">
+
+    <update id="updateUser">
+		update user t
+		<set>
+			<if test="username != null">
+				username = #{username},
+			</if>
+			<if test="id != null">
+				id = #{id},
+			</if>
+			<if test="telephone != null">
+				telephone = #{telephone},
+			</if>
+			<if test="email != null">
+				email = #{email},
+			</if>
+			<if test="birthday != null">
+				birthday = #{birthday},
+			</if>
+			<if test="count != null">
+				count = #{count},
+			</if>
+			<if test="sex != null">
+				sex = #{sex},
+			</if>
+			updateTime = #{updateTime}
+		</set>
+		where t.id = #{id}
+	</update>
+
+</mapper>

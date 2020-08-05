@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html class="x-admin-sm" xmlns:th="http://www.thymeleaf.org">
+  
+  <head>
+    <meta charset="UTF-8">
+    <title>新增用户信息</title>
+    <header th:replace="header::html"></header>
+  </head>
+  
+  <body>
+    <div class="x-body">
+        <form class="layui-form">
+
+            <div class="layui-form-item">
+                <label for="L_id" class="layui-form-label">
+                    <span class="x-red">*</span>实验编号
+                </label>
+                <div class="layui-input-inline">
+                    <input type="text" id="L_id" th:value="${money.id}" name="id" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid layui-word-aux">
+                    <span class="x-red">*</span>输入唯一的实验编号
+                </div>
+            </div>
+
+          <div class="layui-form-item">
+              <label for="L_subject" class="layui-form-label">
+                  <span class="x-red">*</span>姓名
+              </label>
+              <div class="layui-input-inline">
+                  <input type="text" id="L_subject" th:value="${money.subject}" name="subject" lay-verify="required" autocomplete="off" class="layui-input">
+              </div>
+          </div>
+
+            <div class="layui-form-item">
+                <label for="L_card" class="layui-form-label">
+                    <span class="x-red">*</span>一卡通号
+                </label>
+                <div class="layui-input-inline">
+                    <input type="text" id="L_card" th:value="${money.card}" name="card" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label for="L_money" class="layui-form-label">
+                    <span class="x-red">*</span>酬金
+                </label>
+                <div class="layui-input-inline">
+                    <input type="text" id="L_money" th:value="${money.money}" name="money" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label for="L_expTime" class="layui-form-label">*实验日期</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="L_expTime"  th:value="${money.expTime}" name='expTime' placeholder="yyyy-MM-dd" class="layui-input ">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label for="L_payTime" class="layui-form-label">*酬金发放日期</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="L_payTime"  th:value="${money.payTime}" name='payTime' placeholder="yyyy-MM-dd" class="layui-input ">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">*酬金状态</label>
+                <div class="layui-input-block">
+                    <input type="radio" th:value="${money.status}" name="stage" value="0" title="未支付" >
+                    <input type="radio" th:value="${money.status}" name="stage" value="1" title="已发放">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">*支付方式</label>
+                <div class="layui-input-block">
+                    <input type="radio" th:value="${money.paytype}" name="stage" value="0" title="未支付" >
+                    <input type="radio" th:value="${money.paytype}" name="stage" value="1" title="一卡通">
+                    <input type="radio" th:value="${money.paytype}" name="stage" value="2" title="现金">
+                </div>
+            </div>
+
+          <div class="layui-form-item">
+              <label for="L_id" class="layui-form-label">
+              </label>
+              <button  class="layui-btn" lay-filter="add" lay-submit="">
+                  增加
+              </button>
+          </div>
+      </form>
+    </div>
+    <script>
+
+      layui.use(['form','layer', 'laydate'], function(){
+          $ = layui.jquery;
+        var form = layui.form
+        ,layer = layui.layer
+        ,laydate = layui.laydate;
+          //日期
+          laydate.render({
+              elem: '#L_expTime'
+              ,format: 'yyyy-MM-dd' //可任意组合
+          });
+          laydate.render({
+              elem: '#L_payTime'
+              ,format: 'yyyy-MM-dd' //可任意组合
+          });
+      
+        //自定义验证规则
+        form.verify({
+          nikename: function(value){
+            if(value.id != 9){
+              return '请输入正确的一卡通号';
+            }
+          }
+        });
+
+      //监听提交，提交动作里做的具体事情
+        form.on('submit(add)', function(data){
+            var rolelRadio = $("[name=roleId]:checked");
+            if(rolelRadio == undefined || rolelRadio.length <= 0){
+                layer.alert("请给该用户设置角色");
+                return false;
+            }
+            $.ajax({
+                url:"/money/add",
+                type:"POST",
+                data:data.field,
+                dataType:'json',
+                success:function(result){//返回错误信息
+                    if(result.code == 500 || result.code == 5000100 || result.code == 5000101 || result.code == 5000102){
+                        layer.alert(result.msg); //打印错误信息
+                    }else{
+                        layer.alert("设置成功", {icon: 6},function () { //没有错误信息
+                            //关闭当前frame
+                            xadmin.close();
+                            // 可以对父窗口进行刷新
+                            xadmin.father_reload();
+                        });
+                    }
+                }
+            });
+          return false;
+        });
+      });
+
+  </script>
+  </body>
+</html>

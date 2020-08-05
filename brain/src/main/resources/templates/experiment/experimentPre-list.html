@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html class="x-admin-sm" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>实验预约</title>
+    <header th:replace="header::html"></header>
+</head>
+
+<body class="">
+    <div class="x-nav">
+          <span class="layui-breadcrumb">
+            <a href="">首页</a>
+            <a href="">实验预约管理</a>
+            <a>
+              <cite>实验列表</cite></a>
+          </span>
+        <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" href="javascript:location.replace(location.href);" title="刷新">
+            <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+    </div>
+
+    <div class="layui-fluid">
+        <div class="layui-row  layui-col-space15">
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-body ">
+                        <form class="layui-form  layui-col-space5">
+                            <div class="layui-inline layui-show-xs-block">
+                                <input type="text" name="id"  placeholder="请输入预约实验编号" autocomplete="off" class="layui-input">
+                            </div>
+                            <div class="layui-inline layui-show-xs-block">
+                                <button class="layui-btn"  lay-submit="" lay-filter="search"><i class="layui-icon">&#xe615;</i></button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="layui-card-header">
+                        <button class="layui-btn layui-btn-danger" onclick="delAll()"><i class="layui-icon"></i>批量删除</button>
+                        <button class="layui-btn" onclick="xadmin.open('发布新实验','/experimentPre/add')"><i class="layui-icon"></i>发布新实验</button>
+                    </div>
+
+                    <div class="layui-card-body ">
+                        <table class="layui-hide" id="table" lay-filter="member"></table>
+                    </div>
+
+                    <div class="layui-card-body ">
+                        <script type="text/html" id="barDemo">
+                            <a class="layui-btn layui-btn-xs" lay-event="subscribe" >预约</a>
+                            <a class="layui-btn layui-btn-xs" lay-event="edit" >编辑</a>
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+
+
+    layui.use('table', function(){
+        var table = layui.table,
+            form=layui.form;
+        table.render({
+            elem: '#table'
+            ,url: '/experimentPre/list' //数据接口
+            ,page: true //开启分页
+            ,response: {
+                countName: 'count', //规定数据总数的字段名称，默认：count
+                dataName: 'datas' //规定数据列表的字段名称，默认：data
+            }
+            , cols: [
+                [ //表头
+                    {type: 'checkbox', fixed: 'left'}
+                    , {field: 'id', title: '编号', align: 'center', width: 70}
+                    , {field: 'startTime', title: '实验开始时间', align: 'center',width: 160}
+                    , {field: 'endTime', title: '实验结束时间', align: 'center',width: 160}
+                    , {field: 'subjects', title: '需要受试人数', align: 'center',width: 120}
+                    , {field: 'already', title: '成功预约人数', align: 'center',width: 120}
+                    , {field: 'money', title: '酬金', width: 100, align: 'center'}
+                    , {field: 'experience', title: '实验要求', width: 100, align: 'center', templet:function(d){
+                        if(d.experience == '0') return "无要求";
+                        else if(d.experience == '1') return "无实验经验";
+                        else if(d.experience == '2') return "曾参与实验";
+                    }}
+                    , {field: 'content', title: '实验概述', width: 150, align: 'center'}
+                    , {field: 'right', title: '操作', toolbar: '#barDemo', width: 150}
+                ]
+            ]
+        });
+
+        //监听工具条
+        table.on('tool(member)', function(obj){
+            var userId = localStorage.userId;
+            var data = obj.data;
+            if(obj.event === 'edit'){
+                xadmin.open('编辑实验信息','/experimentPre/edit/?id='+data.id);
+            }
+        })
+
+        //搜索
+        form.on('submit(search)', function(data){
+            var username = data.field.username;
+            table.render({
+                elem: '#table'
+                ,url: '/experimentPre/findRoleByFuzzyRoleName' //数据接口
+                ,page: true //开启分页
+                ,where:{
+                    "roleName":username
+                } ,response: {
+                    dataName: 'datas' //规定数据列表的字段名称，默认：data
+                }
+                , cols: [
+                    [ //表头
+                        {type: 'checkbox', fixed: 'left'}
+                        , {field: 'id', title: 'ID', width: 100, align: 'center'}
+                        , {field: 'startTime', title: '实验开始时间',width: 200, align: 'center'}
+                        , {field: 'endTime', title: '实验结束时间',width: 200, align: 'center'}
+                        , {field: 'subjects', title: '需要受试者人数',width: 100, align: 'center'}
+                        , {fixed: 'already', title: '成功预约人数', width: 100, align: 'center'}
+                        , {fixed: 'money', title: '实验酬金', width: 100, align: 'center'}
+                        , {fixed: 'experience', title: '实验要求', width: 150, align: 'center', templet:function(d){
+                            if(d.experience == '0') return "无要求";
+                            else if(d.experience == '1') return "无实验经验";
+                            else if(d.experience == '2') return "曾参与实验";
+                        }}
+                        , {fixed: 'content', title: '实验概述', width: 200, align: 'center'}
+                        , {fixed: 'right', title: '操作', toolbar: '#barDemo', width: 150}
+                    ]
+                ]
+            });
+            return false;
+        });
+    });
+</script>
+</body>
+</html>
